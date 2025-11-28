@@ -22,7 +22,7 @@ def create_course():
     new_course = {
         'title': data['title'],
         'description': data.get('description', ''),
-        'price': data['price'],
+        'price': int(data['price']),
         'schedule': data['schedule'],
         'level': data['level']
     }
