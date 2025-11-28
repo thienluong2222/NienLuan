@@ -28,7 +28,8 @@ def get_stats():
         'users': db.users.count_documents({}),
         'courses': db.courses.count_documents({}),
         'flashcards': db.flashcards.count_documents({}),
-        'blogs': db.blogs.count_documents({})
+        'blogs': db.blogs.count_documents({}),
+        'exams': db.exams.count_documents({}) # [MỚI] Đếm số đề thi
     }
     return jsonify(stats), 200
 
@@ -39,7 +40,6 @@ def get_all_users():
     for u in users: u['_id'] = str(u['_id'])
     return jsonify(users), 200
 
-# [MỚI] API Tạo User từ Admin
 @admin_bp.route('/users', methods=['POST'])
 def create_user():
     if not is_admin(): return jsonify({'message': 'Unauthorized'}), 403
@@ -47,7 +47,7 @@ def create_user():
     data = request.json
     username = data.get('username')
     password = data.get('password')
-    role = data.get('role', 'user') # Cho phép chọn role
+    role = data.get('role', 'user')
 
     if not username or not password:
         return jsonify({'message': 'Thiếu thông tin'}), 400
