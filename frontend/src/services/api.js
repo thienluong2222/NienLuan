@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/services/api.js ---
 const API_BASE_URL = "http://localhost:5000/api";
 
 async function request(endpoint, method = "GET", body = null) {
@@ -62,7 +61,6 @@ export const blogService = {
     delete: (id) => request(`/blogs/${id}`, "DELETE"),
 };
 
-// [MỚI] Exam Service
 export const examService = {
     getAll: () => request("/exams"),
     getDetail: (id) => request(`/exams/${id}`),

@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/CoursesPage.jsx ---
 import React, { useState, useEffect } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { courseService } from "../services/api";

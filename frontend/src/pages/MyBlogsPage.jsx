@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/MyBlogsPage.jsx ---
 import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Plus, X, Loader2 } from "lucide-react";
 import { blogService } from "../services/api";

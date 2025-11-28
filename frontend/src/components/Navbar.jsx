@@ -1,6 +1,6 @@
-// --- FILE: frontend/src/components/Navbar.jsx ---
+
 import React from 'react';
-import { BookOpen, User, LogOut, FileQuestion } from 'lucide-react'; // Import icon FileQuestion
+import { BookOpen, User, LogOut, FileQuestion } from 'lucide-react'; 
 
 export const Navbar = ({ setCurrentPage, user, handleLogout }) => (
     <nav className="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
@@ -12,7 +12,7 @@ export const Navbar = ({ setCurrentPage, user, handleLogout }) => (
                 <button onClick={() => setCurrentPage("home")} className="hover:text-blue-200 font-medium">Trang chủ</button>
                 <button onClick={() => setCurrentPage("courses")} className="hover:text-blue-200 font-medium">Khóa học</button>
                 <button onClick={() => setCurrentPage("exams")} className="hover:text-blue-200 font-medium flex items-center gap-1">
-                     Luyện đề {/* [MỚI] */}
+                    Luyện đề
                 </button>
                 <button onClick={() => setCurrentPage("flashcards")} className="hover:text-blue-200 font-medium">Flashcards</button>
                 <button onClick={() => setCurrentPage("blogs")} className="hover:text-blue-200 font-medium">Blog</button>

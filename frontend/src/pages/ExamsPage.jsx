@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/ExamsPage.jsx ---
 import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, AlertCircle, FileText, ChevronRight, ChevronLeft, Flag } from "lucide-react";
 import { examService } from "../services/api";

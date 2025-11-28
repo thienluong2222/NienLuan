@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/HomePage.jsx ---
 import React from 'react';
 import { BookOpen, Layers, PenTool } from 'lucide-react';
 

@@ -1,5 +1,4 @@
-# --- FILE: backend/routes/courses.py ---
-# (Giữ nguyên các import và phần cũ, thêm hàm delete)
+
 from flask import Blueprint, request, jsonify
 from database import get_db
 from bson.objectid import ObjectId
@@ -29,7 +28,6 @@ def create_course():
     result = db.courses.insert_one(new_course)
     return jsonify({'message': 'Tạo khóa học thành công', 'id': str(result.inserted_id)}), 201
 
-# [MỚI] API Xóa khóa học
 @courses_bp.route('/<course_id>', methods=['DELETE'])
 def delete_course(course_id):
     # Trong thực tế nên check quyền admin ở đây

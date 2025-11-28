@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/FlashcardsPage.jsx ---
 import React, { useState, useEffect } from "react";
 import { Layers, Loader2 } from "lucide-react";
 import { flashcardService } from "../services/api";

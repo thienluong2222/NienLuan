@@ -1,4 +1,4 @@
-# --- FILE: blogs.py ---
+
 from flask import Blueprint, request, jsonify, current_app
 from database import get_db
 import datetime
@@ -28,7 +28,7 @@ def get_user_from_token():
     except:
         return None
 
-# 1. Lấy tất cả bài viết (Public)
+
 @blogs_bp.route('', methods=['GET'])
 def get_blogs():
     try:
@@ -37,7 +37,7 @@ def get_blogs():
     except Exception as e:
         return jsonify({'message': 'Lỗi server', 'error': str(e)}), 500
 
-# 2. Lấy bài viết của CHÍNH TÔI (Private)
+
 @blogs_bp.route('/my-blogs', methods=['GET'])
 def get_my_blogs():
     user_data = get_user_from_token()
@@ -59,7 +59,6 @@ def create_blog():
     if not data.get('title') or not data.get('content'):
         return jsonify({'message': 'Thiếu tiêu đề hoặc nội dung'}), 400
 
-    # [FIX QUAN TRỌNG]: Lấy thông tin user từ DB thay vì Token để tránh lỗi thiếu key 'username'
     user_id = user_data['user_id']
     user = db.users.find_one({'_id': ObjectId(user_id)})
     
@@ -79,7 +78,7 @@ def create_blog():
     result = db.blogs.insert_one(new_blog)
     return jsonify({'message': 'Đăng bài thành công', 'id': str(result.inserted_id)}), 201
 
-# 4. Cập nhật bài viết
+
 @blogs_bp.route('/<blog_id>', methods=['PUT'])
 def update_blog(blog_id):
     user_data = get_user_from_token()

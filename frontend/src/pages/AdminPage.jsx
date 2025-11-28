@@ -1,4 +1,4 @@
-// --- FILE: frontend/src/pages/AdminPage.jsx ---
+
 import React, { useState, useEffect } from "react";
 import { 
     LayoutDashboard, Users, BookOpen, Layers, PenTool, 
@@ -149,7 +149,6 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                         <StatCard icon={BookOpen} label="Khóa học" value={stats.courses} color="border-green-500" onClick={() => setActiveTab("courses")} />
                         <StatCard icon={Layers} label="Flashcards" value={stats.flashcards} color="border-purple-500" onClick={() => setActiveTab("flashcards")} />
                         <StatCard icon={PenTool} label="Bài viết" value={stats.blogs} color="border-orange-500" onClick={() => setActiveTab("blogs")} />
-                        {/* [MỚI] Thẻ Exams */}
                         <StatCard icon={FileQuestion} label="Đề thi" value={stats.exams} color="border-pink-500" onClick={() => setActiveTab("exams")} />
                     </div>
                 ) : (

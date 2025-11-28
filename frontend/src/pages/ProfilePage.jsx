@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/ProfilePage.jsx ---
 import React, { useState, useEffect } from "react";
 import { User, Lock, BookOpen, CheckCircle, PenTool, ChevronRight, FileText, Clock } from "lucide-react";
 import { authService, examService } from "../services/api";
@@ -7,7 +6,6 @@ export const ProfilePage = ({ user, setCurrentPage }) => {
     const [passData, setPassData] = useState({ old: "", new: "" });
     const [loading, setLoading] = useState(false);
     
-    // [MỚI] State cho lịch sử thi
     const [examHistory, setExamHistory] = useState([]);
 
     useEffect(() => {
@@ -61,7 +59,6 @@ export const ProfilePage = ({ user, setCurrentPage }) => {
             </div>
             
             <div className="md:col-span-2 space-y-8">
-                {/* [MỚI] Phần Lịch sử Thi */}
                 <div className="bg-white p-6 rounded-xl shadow-md border min-h-[200px]">
                     <h3 className="text-2xl font-bold mb-6 border-l-4 border-indigo-500 pl-4 text-gray-800">Kết quả Luyện đề</h3>
                     {examHistory.length === 0 ? (
@@ -94,7 +91,6 @@ export const ProfilePage = ({ user, setCurrentPage }) => {
                     )}
                 </div>
 
-                {/* Phần Khóa học (Giữ nguyên) */}
                 <div className="bg-white p-6 rounded-xl shadow-md border min-h-[300px]">
                     <h3 className="text-2xl font-bold mb-6 border-l-4 border-green-500 pl-4 text-gray-800">Khóa học của tôi</h3>
                     {(!user?.enrolled_courses_details || user.enrolled_courses_details.length === 0) ? (

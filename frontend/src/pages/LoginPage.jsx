@@ -1,4 +1,3 @@
-// --- FILE: frontend/src/pages/LoginPage.jsx ---
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { authService } from '../services/api';
@@ -22,7 +21,6 @@ export const LoginPage = ({ setUser, setCurrentPage }) => {
                     localStorage.setItem("token", res.token);
                     setUser(res.user);
                     
-                    // [MỚI] Kiểm tra role để điều hướng
                     if (res.user.role === 'admin') {
                         setCurrentPage("admin");
                     } else {

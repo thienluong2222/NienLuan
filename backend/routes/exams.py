@@ -1,4 +1,4 @@
-# --- FILE: backend/routes/exams.py ---
+
 from flask import Blueprint, request, jsonify, current_app
 from database import get_db
 from bson.objectid import ObjectId
@@ -37,7 +37,7 @@ def create_exam():
     if not is_admin(user_payload): return jsonify({'message': 'Unauthorized'}), 403
 
     data = request.json
-    # data['questions'] là list các object: { question: "", options: ["A", "B", "C", "D"], correct_index: 0 }
+    
     if not data.get('title') or not data.get('questions'):
         return jsonify({'message': 'Thiếu tiêu đề hoặc câu hỏi'}), 400
 

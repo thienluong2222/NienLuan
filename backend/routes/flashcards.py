@@ -1,4 +1,4 @@
-# --- FILE: backend/routes/flashcards.py ---
+
 from flask import Blueprint, jsonify, request
 from database import get_db
 from bson.objectid import ObjectId
@@ -22,7 +22,7 @@ def get_flashcards():
         decks = [sample_deck]
     return jsonify([serialize_doc(d) for d in decks]), 200
 
-# [MỚI] Tạo bộ thẻ
+
 @flashcards_bp.route('', methods=['POST'])
 def create_deck():
     data = request.json
