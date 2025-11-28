@@ -13,7 +13,7 @@ export const MyBlogsPage = ({ setCurrentPage }) => {
 
     // Fetch bài viết của tôi
     const fetchMyBlogs = () => {
-        setLoading(true);
+        // setLoading(true);
         blogService.getMyBlogs()
             .then(data => setBlogs(data || []))
             .catch(err => alert(err.message))
