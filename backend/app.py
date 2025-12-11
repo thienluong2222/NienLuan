@@ -11,7 +11,7 @@ from routes.exams import exams_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chuoi-bi-mat-khong-duoc-tiet-lo-123456'
-CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(courses_bp, url_prefix='/api/courses')
@@ -25,4 +25,4 @@ def home():
     return "English Course Backend API is running!"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)
