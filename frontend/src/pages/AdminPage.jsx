@@ -1,4 +1,4 @@
-
+// --- FILE: frontend/src/pages/AdminPage.jsx ---
 import React, { useState, useEffect } from "react";
 import { 
     LayoutDashboard, Users, BookOpen, Layers, PenTool, 
@@ -79,7 +79,12 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                 return (<>
                     <input className="w-full border p-2 rounded mb-3" placeholder="Username" onChange={e => setFormData({...formData, username: e.target.value})} required />
                     <input className="w-full border p-2 rounded mb-3" type="password" placeholder="Password" onChange={e => setFormData({...formData, password: e.target.value})} required />
-                    <select className="w-full border p-2 rounded mb-3" onChange={e => setFormData({...formData, role: e.target.value})}><option value="user">User</option><option value="admin">Admin</option></select>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
+                    <select className="w-full border p-2 rounded mb-3" onChange={e => setFormData({...formData, role: e.target.value})} defaultValue="user">
+                        <option value="user">Học viên (User)</option>
+                        <option value="teacher">Giáo viên (Teacher)</option>
+                        <option value="admin">Quản trị viên (Admin)</option>
+                    </select>
                 </>);
             case "courses":
                 return (<>
@@ -87,6 +92,7 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                     <input className="w-full border p-2 rounded mb-3" placeholder="Giá" type="number" onChange={e => setFormData({...formData, price: e.target.value})} required />
                     <input className="w-full border p-2 rounded mb-3" placeholder="Lịch học" onChange={e => setFormData({...formData, schedule: e.target.value})} required />
                     <input className="w-full border p-2 rounded mb-3" placeholder="Trình độ" onChange={e => setFormData({...formData, level: e.target.value})} required />
+                    <textarea className="w-full border p-2 rounded mb-3" placeholder="Mô tả" onChange={e => setFormData({...formData, description: e.target.value})} />
                 </>);
             case "flashcards":
                 return (<><input className="w-full border p-2 rounded mb-3" placeholder="Tên bộ thẻ" onChange={e => setFormData({...formData, title: e.target.value})} required /></>);
@@ -161,8 +167,15 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                                         <tr key={item._id} className="border-b hover:bg-gray-50">
                                             <td className="p-4 font-bold">{item.username || item.title || "No Name"}</td>
                                             <td className="p-4 text-sm text-gray-600">
-                                                {activeTab === "users" && item.role}
-                                                {activeTab === "courses" && `${item.price}đ - ${item.level}`}
+                                                {activeTab === "users" && (
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                        item.role === 'admin' ? 'bg-red-100 text-red-600' : 
+                                                        item.role === 'teacher' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'
+                                                    }`}>
+                                                        {item.role.toUpperCase()}
+                                                    </span>
+                                                )}
+                                                {activeTab === "courses" && `${item.price}đ - ${item.level} (GV: ${item.instructor_name || 'Admin'})`}
                                                 {activeTab === "exams" && `${item.duration}p - ${item.questions?.length} câu`}
                                                 {activeTab === "blogs" && `Tác giả: ${item.author}`}
                                                 {activeTab === "flashcards" && `${item.cards?.length || 0} thẻ`}

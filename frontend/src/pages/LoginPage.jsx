@@ -1,8 +1,10 @@
+// --- FILE: frontend/src/pages/LoginPage.jsx ---
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { authService } from '../services/api';
 
-export const LoginPage = ({ setUser, setCurrentPage }) => {
+// [FIX] Nhận thêm refreshUser
+export const LoginPage = ({ setUser, setCurrentPage, refreshUser }) => {
     const [isRegister, setIsRegister] = useState(false);
     const [formData, setFormData] = useState({ username: "", password: "" });
     const [loading, setLoading] = useState(false);
@@ -13,14 +15,23 @@ export const LoginPage = ({ setUser, setCurrentPage }) => {
         try {
             if (isRegister) {
                 await authService.register(formData.username, formData.password);
-                alert("Đăng ký thành công!");
+                alert("Đăng ký thành công! Vui lòng đăng nhập.");
                 setIsRegister(false);
             } else {
                 const res = await authService.login(formData.username, formData.password);
                 if (res && res.token) {
                     localStorage.setItem("token", res.token);
-                    setUser(res.user);
                     
+                    // [FIX] Thay vì setUser(res.user) ngay, ta gọi refreshUser để lấy full data (bao gồm chi tiết khóa học)
+                    // API login thường trả về user basic, còn API /me trả về user full details
+                    if (refreshUser) {
+                        await refreshUser();
+                    } else {
+                        // Fallback nếu không có refreshUser
+                        setUser(res.user);
+                    }
+                    
+                    // Kiểm tra role từ response login để chuyển trang nhanh
                     if (res.user.role === 'admin') {
                         setCurrentPage("admin");
                     } else {
@@ -43,7 +54,7 @@ export const LoginPage = ({ setUser, setCurrentPage }) => {
                     </button>
                 </form>
                 <p className="mt-6 text-center cursor-pointer text-blue-600 font-bold" onClick={() => setIsRegister(!isRegister)}>
-                    {isRegister ? "Đăng nhập" : "Đăng ký miễn phí"}
+                    {isRegister ? "Đăng nhập" : "Đăng ký"}
                 </p>
             </div>
         </div>
