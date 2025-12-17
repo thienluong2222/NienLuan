@@ -18,11 +18,9 @@ api_key = os.getenv("GEMINI_API_KEY")
 exams_bp = Blueprint('exams', __name__)
 db = get_db()
 
-# --- CẤU HÌNH GEMINI ---
-# Hãy thay thế bằng API Key của bạn hoặc lấy từ os.environ
 GEMINI_API_KEY = api_key
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash') # Hoặc gemini-pro
+model = genai.GenerativeModel('gemini-2.5-flash') 
 
 def get_user_from_token():
     token = None
@@ -157,17 +155,14 @@ def generate_questions_from_pdf():
     if file.filename == '': return jsonify({'message': 'Chưa chọn file'}), 400
 
     try:
-        # 1. Đọc nội dung PDF
         reader = PdfReader(file)
         text_content = ""
         for page in reader.pages:
             text_content += page.extract_text() + "\n"
         
-        # Giới hạn ký tự để tránh lỗi token limit (tùy chỉnh)
+        # Giới hạn ký tự để tránh lỗi token limit
         text_content = text_content[:10000] 
 
-        # 2. Tạo Prompt cho Gemini
-        # Yêu cầu trả về JSON thuần túy không có markdown ```json ... ```
         prompt = f"""
         Dựa vào nội dung văn bản sau, hãy tạo ra đầy đủ câu hỏi trắc nghiệm tiếng Anh (hoặc tiếng Việt tùy nội dung).
         Yêu cầu định dạng trả về là một chuỗi JSON thuần túy (không bọc trong Markdown code block), là một danh sách các object có cấu trúc:
@@ -183,14 +178,11 @@ def generate_questions_from_pdf():
         {text_content}
         """
 
-        # 3. Gọi Gemini
         response = model.generate_content(prompt)
         raw_text = response.text
 
-        # Xử lý chuỗi trả về (đôi khi Gemini vẫn trả về markdown ```json)
         clean_json_text = raw_text.replace("```json", "").replace("```", "").strip()
         
-        # Parse JSON
         questions = json.loads(clean_json_text)
 
         return jsonify({'questions': questions}), 200
