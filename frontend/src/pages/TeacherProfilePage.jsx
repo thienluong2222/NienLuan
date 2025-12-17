@@ -1,9 +1,8 @@
 // --- FILE: frontend/src/pages/TeacherProfilePage.jsx ---
 import React, { useState, useEffect } from "react";
-import { User, Lock, BookOpen, PenTool, Plus, Trash2, FileQuestion, GraduationCap, X, Settings } from "lucide-react";
+import { User, Lock, BookOpen, PenTool, Plus, Trash2, FileQuestion, GraduationCap, X, Settings, UploadCloud, Loader2 } from "lucide-react";
 import { authService, courseService, examService } from "../services/api";
 
-// [UPDATED] Nhận thêm prop onViewDetail
 export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
     const [activeTab, setActiveTab] = useState("courses");
     const [loading, setLoading] = useState(false);
@@ -17,7 +16,12 @@ export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
     const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
     const [isExamModalOpen, setIsExamModalOpen] = useState(false);
     const [courseForm, setCourseForm] = useState({});
+    
+    // Exam Form State nâng cao
     const [examForm, setExamForm] = useState({});
+    const [examMode, setExamMode] = useState("manual"); // 'manual' | 'pdf'
+    const [pdfFile, setPdfFile] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Password change state
     const [passData, setPassData] = useState({ old: "", new: "" });
@@ -56,13 +60,41 @@ export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
         } catch (err) { alert(err.message); }
     };
 
+    // [UPDATED] Handler Tạo đề thi
     const handleCreateExam = async (e) => {
         e.preventDefault();
         try {
             const parsedQuestions = JSON.parse(examForm.questionsJson || "[]");
+            if (parsedQuestions.length === 0) return alert("Danh sách câu hỏi trống!");
+
             await examService.create({ ...examForm, questions: parsedQuestions });
-            alert("Tạo đề thi thành công!"); setIsExamModalOpen(false); fetchMyExams();
-        } catch (err) { alert("Lỗi JSON: " + err.message); }
+            alert("Tạo đề thi thành công!"); 
+            setIsExamModalOpen(false); 
+            fetchMyExams();
+        } catch (err) { alert("Lỗi JSON câu hỏi: " + err.message); }
+    };
+
+    // [NEW] Handler Xử lý PDF
+    const handleGenerateFromPDF = async () => {
+        if (!pdfFile) return alert("Vui lòng chọn file PDF!");
+        setIsGenerating(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", pdfFile);
+            const res = await examService.generateQuestionsFromPDF(formData);
+            
+            // Điền kết quả vào ô JSON cho giáo viên review
+            setExamForm(prev => ({
+                ...prev,
+                questionsJson: JSON.stringify(res.questions, null, 2)
+            }));
+            setExamMode("manual"); // Chuyển về tab manual để review
+            alert("Đã sinh câu hỏi thành công! Vui lòng kiểm tra lại.");
+        } catch (err) {
+            alert("Lỗi sinh đề: " + err.message);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleDeleteCourse = async (id) => {
@@ -135,7 +167,6 @@ export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
                                             <p className="text-sm text-gray-500">{course.level} • {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            {/* [UPDATED] Nút Quản lý/Chi tiết */}
                                             <button 
                                                 onClick={() => onViewDetail(course._id)}
                                                 className="bg-blue-100 text-blue-600 px-3 py-2 rounded font-bold text-sm flex items-center gap-2 hover:bg-blue-200"
@@ -156,7 +187,7 @@ export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
                     <div className="bg-white p-6 rounded-xl shadow-md border min-h-[400px]">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-bold text-gray-800">Đề thi của tôi</h3>
-                            <button onClick={() => {setExamForm({}); setIsExamModalOpen(true)}} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 shadow"><Plus size={20} /> Tạo đề thi</button>
+                            <button onClick={() => {setExamForm({}); setIsExamModalOpen(true); setExamMode("manual")}} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 shadow"><Plus size={20} /> Tạo đề thi</button>
                         </div>
                         {loading ? <p>Đang tải...</p> : (
                             <div className="grid gap-4">
@@ -223,30 +254,66 @@ export const TeacherProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
                         <form onSubmit={handleCreateCourse} className="space-y-3">
                             <input className="w-full border p-2 rounded" placeholder="Tên khóa học" onChange={e => setCourseForm({...courseForm, title: e.target.value})} required />
                             <input className="w-full border p-2 rounded" placeholder="Giá tiền" type="number" onChange={e => setCourseForm({...courseForm, price: e.target.value})} required />
-                            <input className="w-full border p-2 rounded" placeholder="Lịch học" onChange={e => setCourseForm({...courseForm, schedule: e.target.value})} required />
-                            <input className="w-full border p-2 rounded" placeholder="Trình độ" onChange={e => setCourseForm({...courseForm, level: e.target.value})} required />
-                            <textarea className="w-full border p-2 rounded h-24" placeholder="Mô tả" onChange={e => setCourseForm({...courseForm, description: e.target.value})} />
+                            <input className="w-full border p-2 rounded" placeholder="Lịch học (VD: 2-4-6)" onChange={e => setCourseForm({...courseForm, schedule: e.target.value})} required />
+                            <input className="w-full border p-2 rounded" placeholder="Trình độ (VD: Beginner)" onChange={e => setCourseForm({...courseForm, level: e.target.value})} required />
+                            <textarea className="w-full border p-2 rounded h-24" placeholder="Mô tả chi tiết" onChange={e => setCourseForm({...courseForm, description: e.target.value})} />
                             <button className="w-full bg-blue-600 text-white py-2 rounded font-bold mt-2">Đăng khóa học</button>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* MODAL ĐỀ THI */}
+            {/* [UPDATED] MODAL ĐỀ THI - Có 2 chế độ */}
             {isExamModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-lg">Tạo đề thi mới</h3><button onClick={() => setIsExamModalOpen(false)}><X /></button></div>
-                        <form onSubmit={handleCreateExam} className="space-y-3">
-                            <input className="w-full border p-2 rounded" placeholder="Tên đề thi" onChange={e => setExamForm({...examForm, title: e.target.value})} required />
-                            <input className="w-full border p-2 rounded" placeholder="Mô tả ngắn" onChange={e => setExamForm({...examForm, description: e.target.value})} />
-                            <div className="flex gap-2">
-                                <input className="w-1/2 border p-2 rounded" type="number" placeholder="Thời gian (phút)" onChange={e => setExamForm({...examForm, duration: e.target.value})} required />
-                                <input className="w-1/2 border p-2 rounded" placeholder="Mật khẩu (Tùy chọn)" onChange={e => setExamForm({...examForm, password: e.target.value})} />
+                        
+                        {/* Tabs chuyển chế độ */}
+                        <div className="flex gap-2 mb-4 border-b">
+                            <button onClick={() => setExamMode("manual")} className={`pb-2 px-2 font-bold border-b-2 ${examMode === 'manual' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}>Nhập tay / Review</button>
+                            <button onClick={() => setExamMode("pdf")} className={`pb-2 px-2 font-bold border-b-2 flex items-center gap-1 ${examMode === 'pdf' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}><UploadCloud size={16}/> Từ PDF (AI)</button>
+                        </div>
+
+                        {examMode === "pdf" ? (
+                            <div className="space-y-4 text-center py-4">
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 bg-gray-50">
+                                    <UploadCloud size={48} className="mx-auto text-gray-400 mb-2"/>
+                                    <p className="text-gray-500 mb-4">Tải lên file PDF đề thi hoặc tài liệu.</p>
+                                    <input type="file" accept=".pdf" className="hidden" id="pdfUpload" onChange={e => setPdfFile(e.target.files[0])} />
+                                    <label htmlFor="pdfUpload" className="bg-indigo-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-indigo-700 inline-block font-bold">
+                                        {pdfFile ? pdfFile.name : "Chọn file PDF"}
+                                    </label>
+                                </div>
+                                <button 
+                                    onClick={handleGenerateFromPDF} 
+                                    disabled={isGenerating || !pdfFile}
+                                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isGenerating ? <Loader2 className="animate-spin"/> : <Settings size={20}/>}
+                                    {isGenerating ? "AI đang đọc và tạo đề..." : "Bắt đầu tạo câu hỏi"}
+                                </button>
+                                <p className="text-xs text-gray-500 italic">Hệ thống sẽ dùng Gemini AI để đọc PDF và tự động điền vào tab "Nhập tay/Review".</p>
                             </div>
-                            <textarea className="w-full border p-2 rounded h-32 font-mono text-xs" placeholder='JSON Questions: [{"question":"...", "options":["A","B"], "correct_index":0}]' onChange={e => setExamForm({...examForm, questionsJson: e.target.value})} required />
-                            <button className="w-full bg-indigo-600 text-white py-2 rounded font-bold mt-2">Tạo đề</button>
-                        </form>
+                        ) : (
+                            <form onSubmit={handleCreateExam} className="space-y-3">
+                                <input className="w-full border p-2 rounded" placeholder="Tên đề thi" onChange={e => setExamForm({...examForm, title: e.target.value})} required />
+                                <input className="w-full border p-2 rounded" placeholder="Mô tả ngắn" onChange={e => setExamForm({...examForm, description: e.target.value})} />
+                                <div className="flex gap-2">
+                                    <input className="w-1/2 border p-2 rounded" type="number" placeholder="Thời gian (phút)" onChange={e => setExamForm({...examForm, duration: e.target.value})} required />
+                                    <input className="w-1/2 border p-2 rounded" placeholder="Mật khẩu (Tùy chọn)" onChange={e => setExamForm({...examForm, password: e.target.value})} />
+                                </div>
+                                <label className="block text-sm font-medium text-gray-700">Danh sách câu hỏi (JSON):</label>
+                                <textarea 
+                                    className="w-full border p-2 rounded h-48 font-mono text-xs" 
+                                    placeholder='[{"question":"...", "options":["A","B"], "correct_index":0}]' 
+                                    value={examForm.questionsJson || ""}
+                                    onChange={e => setExamForm({...examForm, questionsJson: e.target.value})} 
+                                    required 
+                                />
+                                <button className="w-full bg-indigo-600 text-white py-2 rounded font-bold mt-2">Lưu & Tạo đề</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
