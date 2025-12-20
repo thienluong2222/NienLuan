@@ -97,7 +97,7 @@ export const ProfilePage = ({ user, setCurrentPage, onViewDetail }) => {
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="font-bold text-gray-800 flex items-center gap-2"><FileText size={16} className="text-indigo-500"/> {h.exam_title}</span>
                                     <span className={`font-bold px-2 py-1 rounded text-xs ${h.score/h.total_questions >= 0.5 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                        {h.score}/{h.total_questions} điểm
+                                        {h.score}/{h.total_questions} câu ({(h.score/h.total_questions)*10}/10 điểm)
                                     </span>
                                 </div>
                                 <div className="text-xs text-gray-400 flex justify-between">

@@ -172,11 +172,11 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                                                         item.role === 'admin' ? 'bg-red-100 text-red-600' : 
                                                         item.role === 'teacher' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'
                                                     }`}>
-                                                        {item.role.toUpperCase()}
+                                                        {(item.role || 'user').toUpperCase()}
                                                     </span>
                                                 )}
                                                 {activeTab === "courses" && `${item.price}đ - ${item.level} (GV: ${item.instructor_name || 'Admin'})`}
-                                                {activeTab === "exams" && `${item.duration}p - ${item.questions?.length} câu`}
+                                                {activeTab === "exams" && `${item.duration}p`}
                                                 {activeTab === "blogs" && `Tác giả: ${item.author}`}
                                                 {activeTab === "flashcards" && `${item.cards?.length || 0} thẻ`}
                                             </td>

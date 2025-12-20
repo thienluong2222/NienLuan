@@ -109,7 +109,7 @@ export const ExamsPage = ({ user }) => {
                                     <div key={idx} className="border-b pb-2">
                                         <div className="flex justify-between font-bold text-sm">
                                             <span>{h.exam_title}</span>
-                                            <span className={h.score/h.total_questions >= 0.5 ? "text-green-600" : "text-red-500"}>{h.score}/{h.total_questions}</span>
+                                            <span className={h.score/h.total_questions >= 0.5 ? "text-green-600" : "text-red-500"}>{h.score}/{h.total_questions} ({(h.score / h.total_questions) * 100}%)</span>
                                         </div>
                                         <div className="text-xs text-gray-400">{new Date(h.timestamp).toLocaleString()}</div>
                                     </div>
@@ -130,7 +130,7 @@ export const ExamsPage = ({ user }) => {
         return (
             <div className="container mx-auto p-4 max-w-6xl">
                 {/* Header cố định */}
-                 <div className="bg-white p-4 rounded-xl shadow mb-6 flex justify-between items-center sticky top-20 z-10 border-b-4 border-indigo-500">
+                <div className="bg-white p-4 rounded-xl shadow mb-6 flex justify-between items-center sticky top-20 z-10 border-b-4 border-indigo-500">
                     <h2 className="font-bold text-xl truncate max-w-md">{currentExam.title}</h2>
                     <div className={`font-mono font-bold text-xl flex items-center gap-2 px-4 py-1 rounded ${timeRemaining < 60 ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>
                         <Clock size={24} /> {formatTime(timeRemaining)}
@@ -256,7 +256,7 @@ export const ExamsPage = ({ user }) => {
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className="bg-indigo-50 p-4 rounded-xl">
                             <p className="text-xs text-indigo-500 font-bold uppercase">Điểm số</p>
-                            <p className="text-3xl font-bold text-indigo-700">{resultData.score}/{resultData.total}</p>
+                            <p className="text-3xl font-bold text-indigo-700">{resultData.score} / {resultData.total}</p>
                         </div>
                         <div className="bg-orange-50 p-4 rounded-xl">
                             <p className="text-xs text-orange-500 font-bold uppercase">Lần thi</p>

@@ -164,7 +164,12 @@ def generate_questions_from_pdf():
         text_content = text_content[:10000] 
 
         prompt = f"""
+        Bạn là giáo viên đang soạn đề thi trắc nghiệm dựa trên tài liệu học tập được cung cấp.
         Dựa vào nội dung văn bản sau, hãy tạo ra đầy đủ câu hỏi trắc nghiệm tiếng Anh (hoặc tiếng Việt tùy nội dung).
+        Chú ý mỗi câu hỏi chỉ có 1 đáp án, đáp án có thể được đặt ở cuối tài liệu, phương án được highlight trong tài liệu.
+        Không tạo câu hỏi nếu không tìm thấy thông tin liên quan trong tài liệu.
+        Tạo 5 câu hỏi mẫu.
+        Không nhầm lẫn tạo câu hỏi từ tiêu đề của tài liệu, mục lục, hoặc các phần không liên quan.
         Yêu cầu định dạng trả về là một chuỗi JSON thuần túy (không bọc trong Markdown code block), là một danh sách các object có cấu trúc:
         [
             {{
