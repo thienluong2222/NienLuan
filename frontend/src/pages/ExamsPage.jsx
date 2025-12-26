@@ -254,7 +254,7 @@ export const ExamsPage = ({ user }) => {
                     <p className="text-gray-500 mb-6">Bạn đã nộp bài thành công.</p>
                     
                     <div className="grid grid-cols-3 gap-4 mb-8">
-                        <div className="bg-indigo-50 p-4 rounded-xl">
+                        <div className="bg-indigo-50 p-4 rounded-xl">``
                             <p className="text-xs text-indigo-500 font-bold uppercase">Điểm số</p>
                             <p className="text-3xl font-bold text-indigo-700">{resultData.score} / {resultData.total}</p>
                         </div>

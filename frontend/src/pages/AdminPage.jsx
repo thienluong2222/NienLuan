@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { 
     LayoutDashboard, Users, BookOpen, Layers, PenTool, 
-    Trash2, LogOut, ArrowLeft, Plus, X, FileQuestion 
+    Trash2, LogOut, ArrowLeft, Plus, X, FileQuestion, UploadCloud, Settings, Loader2, CheckCircle, Circle
 } from "lucide-react";
 import { adminService, courseService, flashcardService, blogService, examService } from "../services/api";
 
@@ -14,9 +14,10 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({});
 
-    const sampleQuestions = JSON.stringify([
-        { "question": "Câu hỏi mẫu?", "options": ["A", "B", "C", "D"], "correct_index": 0 }
-    ], null, 2);
+    // Exam Builder State
+    const [examMode, setExamMode] = useState("manual");
+    const [pdfFile, setPdfFile] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => { fetchStats(); }, []);
     useEffect(() => { if (activeTab !== "dashboard") fetchDataForTab(activeTab); }, [activeTab]);
@@ -51,7 +52,64 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
         } catch (err) { alert(err.message); }
     };
 
-    const handleOpenModal = () => { setFormData({}); setIsModalOpen(true); };
+    const handleOpenModal = () => { 
+        // Reset form khi mở modal
+        if (activeTab === 'exams') {
+            setFormData({ title: "", duration: "", password: "", description: "", questions: [] });
+            setExamMode("manual");
+        } else {
+            setFormData({}); 
+        }
+        setIsModalOpen(true); 
+    };
+
+    // --- Question Builder Helpers (Copy từ TeacherPage) ---
+    const addQuestion = () => {
+        setFormData(prev => ({
+            ...prev,
+            questions: [...(prev.questions || []), { question: "", options: ["Option 1", "Option 2"], correct_index: 0 }]
+        }));
+    };
+    const removeQuestion = (index) => {
+        const newQuestions = [...formData.questions];
+        newQuestions.splice(index, 1);
+        setFormData(prev => ({ ...prev, questions: newQuestions }));
+    };
+    const updateQuestion = (index, field, value) => {
+        const newQuestions = [...formData.questions];
+        newQuestions[index][field] = value;
+        setFormData(prev => ({ ...prev, questions: newQuestions }));
+    };
+    const updateOption = (qIndex, oIndex, value) => {
+        const newQuestions = [...formData.questions];
+        newQuestions[qIndex].options[oIndex] = value;
+        setFormData(prev => ({ ...prev, questions: newQuestions }));
+    };
+    const addOption = (qIndex) => {
+        const newQuestions = [...formData.questions];
+        newQuestions[qIndex].options.push(`Option ${newQuestions[qIndex].options.length + 1}`);
+        setFormData(prev => ({ ...prev, questions: newQuestions }));
+    };
+    const removeOption = (qIndex, oIndex) => {
+        const newQuestions = [...formData.questions];
+        if (newQuestions[qIndex].options.length <= 2) return alert("Tối thiểu 2 đáp án");
+        newQuestions[qIndex].options.splice(oIndex, 1);
+        if (newQuestions[qIndex].correct_index >= newQuestions[qIndex].options.length) newQuestions[qIndex].correct_index = 0;
+        setFormData(prev => ({ ...prev, questions: newQuestions }));
+    };
+
+    const handleGenerateFromPDF = async () => {
+        if (!pdfFile) return alert("Vui lòng chọn file PDF!");
+        setIsGenerating(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", pdfFile);
+            const res = await examService.generateQuestionsFromPDF(fd);
+            setFormData(prev => ({ ...prev, questions: res.questions }));
+            setExamMode("manual");
+            alert("Đã sinh câu hỏi thành công! Vui lòng kiểm tra lại.");
+        } catch (err) { alert("Lỗi sinh đề: " + err.message); } finally { setIsGenerating(false); }
+    };
 
     const handleCreate = async (e) => {
         e.preventDefault();
@@ -61,8 +119,8 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
             if (activeTab === "flashcards") await flashcardService.create(formData);
             if (activeTab === "blogs") await blogService.create(formData);
             if (activeTab === "exams") {
-                const parsedQuestions = JSON.parse(formData.questionsJson || "[]");
-                await examService.create({ ...formData, questions: parsedQuestions });
+                if (!formData.questions || formData.questions.length === 0) return alert("Đề thi phải có ít nhất 1 câu hỏi!");
+                await examService.create(formData); // Gửi trực tiếp object formData (đã có mảng questions)
             }
             alert("Thêm mới thành công!");
             setIsModalOpen(false);
@@ -102,16 +160,59 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                     <textarea className="w-full border p-2 rounded mb-3 h-20" placeholder="Nội dung" onChange={e => setFormData({...formData, content: e.target.value})} required />
                 </>);
             case "exams":
-                return (<>
-                    <input className="w-full border p-2 rounded mb-3" placeholder="Tên đề thi" onChange={e => setFormData({...formData, title: e.target.value})} required />
-                    <input className="w-full border p-2 rounded mb-3" type="number" placeholder="Thời gian (phút)" onChange={e => setFormData({...formData, duration: e.target.value})} required />
-                    <textarea className="w-full border p-2 rounded mb-1 h-40 font-mono text-xs" placeholder="JSON câu hỏi..." defaultValue={sampleQuestions} onChange={e => setFormData({...formData, questionsJson: e.target.value})} required />
-                </>);
+                return (
+                    <div>
+                        {/* Tab Switcher */}
+                        <div className="flex gap-2 mb-4 border-b">
+                            <button type="button" onClick={() => setExamMode("manual")} className={`pb-2 px-2 font-bold border-b-2 ${examMode === 'manual' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}>Soạn đề</button>
+                            <button type="button" onClick={() => setExamMode("pdf")} className={`pb-2 px-2 font-bold border-b-2 flex items-center gap-1 ${examMode === 'pdf' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}><UploadCloud size={16}/> Từ PDF (AI)</button>
+                        </div>
+
+                        {examMode === "pdf" ? (
+                            <div className="text-center py-4 border-2 border-dashed rounded-xl bg-gray-50">
+                                <UploadCloud size={40} className="mx-auto text-gray-400 mb-2"/>
+                                <p className="text-gray-500 mb-4 text-sm">Upload PDF để AI sinh câu hỏi.</p>
+                                <input type="file" accept=".pdf" className="hidden" id="pdfUpload" onChange={e => setPdfFile(e.target.files[0])} />
+                                <label htmlFor="pdfUpload" className="bg-indigo-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-indigo-700 inline-block font-bold text-sm mb-2">{pdfFile ? pdfFile.name : "Chọn file"}</label>
+                                <button type="button" onClick={handleGenerateFromPDF} disabled={isGenerating || !pdfFile} className="w-full bg-green-600 text-white py-2 rounded font-bold disabled:opacity-50 text-sm">{isGenerating ? "Đang xử lý..." : "Tạo câu hỏi"}</button>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <input className="w-full border p-2 rounded" placeholder="Tên đề thi" value={formData.title || ""} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                                <div className="flex gap-2">
+                                    <input className="w-1/2 border p-2 rounded" type="number" placeholder="Phút" value={formData.duration || ""} onChange={e => setFormData({...formData, duration: e.target.value})} required />
+                                    <input className="w-1/2 border p-2 rounded" placeholder="Mật khẩu" value={formData.password || ""} onChange={e => setFormData({...formData, password: e.target.value})} />
+                                </div>
+                                
+                                {/* Question List */}
+                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar border rounded p-2 bg-gray-50">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="font-bold text-sm text-gray-700">Câu hỏi ({formData.questions?.length || 0})</label>
+                                        <button type="button" onClick={addQuestion} className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold">+ Thêm</button>
+                                    </div>
+                                    {(formData.questions || []).map((q, qIdx) => (
+                                        <div key={qIdx} className="bg-white border rounded p-3 mb-2 relative">
+                                            <button type="button" onClick={() => removeQuestion(qIdx)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><X size={16}/></button>
+                                            <input className="w-full border-b mb-2 text-sm font-medium focus:outline-none" placeholder={`Câu hỏi ${qIdx + 1}`} value={q.question} onChange={e => updateQuestion(qIdx, 'question', e.target.value)} />
+                                            {q.options.map((opt, oIdx) => (
+                                                <div key={oIdx} className="flex items-center gap-2 mb-1">
+                                                    <button type="button" onClick={() => updateQuestion(qIdx, 'correct_index', oIdx)} className={q.correct_index === oIdx ? 'text-green-600' : 'text-gray-300'}>{q.correct_index === oIdx ? <CheckCircle size={16}/> : <Circle size={16}/>}</button>
+                                                    <input className="flex-1 border p-1 rounded text-xs" value={opt} onChange={e => updateOption(qIdx, oIdx, e.target.value)} placeholder={`Đáp án ${oIdx+1}`} />
+                                                    <button type="button" onClick={() => removeOption(qIdx, oIdx)} className="text-gray-300 hover:text-red-500"><X size={14}/></button>
+                                                </div>
+                                            ))}
+                                            <button type="button" onClick={() => addOption(qIdx)} className="text-xs text-blue-500 hover:underline ml-6">+ Đáp án</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
             default: return null;
         }
     };
 
-    // Sub-component hiển thị thẻ thống kê
     const StatCard = ({ icon: Icon, label, value, color, onClick }) => (
         <div onClick={onClick} className={`bg-white p-6 rounded-xl shadow cursor-pointer hover:shadow-lg border-l-4 ${color} flex items-center justify-between transition-transform hover:-translate-y-1`}>
             <div><p className="text-gray-500 font-bold uppercase text-xs">{label}</p><p className="text-3xl font-bold text-gray-800">{value}</p></div>
@@ -176,7 +277,7 @@ export const AdminPage = ({ user, handleLogout, setCurrentPage }) => {
                                                     </span>
                                                 )}
                                                 {activeTab === "courses" && `${item.price}đ - ${item.level} (GV: ${item.instructor_name || 'Admin'})`}
-                                                {activeTab === "exams" && `${item.duration}p`}
+                                                {activeTab === "exams" && `${item.duration}p - ${item.questions?.length} câu`}
                                                 {activeTab === "blogs" && `Tác giả: ${item.author}`}
                                                 {activeTab === "flashcards" && `${item.cards?.length || 0} thẻ`}
                                             </td>
